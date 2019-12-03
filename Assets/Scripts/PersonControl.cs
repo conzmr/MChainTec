@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class PersonControl : MonoBehaviour
 {
+ 
     static double[,] transitionMatrix = new double[,] { 
             {0, 0.06, 0, 0, 0, 0, 0, 0, 0, 0.28, 0, 0.66}, // 0 = Biblioteca
             {.14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, .86},   // 1 = Wellness center
@@ -19,7 +20,6 @@ public class PersonControl : MonoBehaviour
             {0.14, 0.09, 0.08, 0.07, 0.15, 0.19, 0.06, 0, 0, 0, 0.22, 0}, // 11 = Ciberplaza
         };
 
-    [SerializeField]
     Transform[] waypoints = new Transform[12];
 
     [SerializeField]
@@ -32,7 +32,11 @@ public class PersonControl : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        waypointIndex = Random.Range(1, 12);
+        waypoints = PlacesManagerController.Instance.Waypoints;
+
         transform.position = waypoints [waypointIndex].transform.position;
+       
     }
 
     // Update is called once per frame
@@ -48,7 +52,7 @@ public class PersonControl : MonoBehaviour
     {
         double random = Random.Range(0.0f, 1.0f);
         double cumulativeProb = 0;
-        for (int i = 0; i < 12; i++){
+        for (int i = 0; i < waypoints.Length; i++){
             cumulativeProb += transitionMatrix[waypointIndex, i];
             if(cumulativeProb >= random){
                 return i;
