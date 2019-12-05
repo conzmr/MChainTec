@@ -27,7 +27,9 @@ public class PersonControl : MonoBehaviour
 
     [SerializeField]
     int waypointIndex = 0;
+    private int previousWaypointIndex;
     private bool shouldMove = true;
+    private bool decrease = false;
 
     // Start is called before the first frame update
     void Start()
@@ -36,7 +38,7 @@ public class PersonControl : MonoBehaviour
         waypoints = PlacesManagerController.Instance.Waypoints;
 
         transform.position = waypoints [waypointIndex].transform.position;
-       
+        previousWaypointIndex = waypointIndex;
     }
 
     // Update is called once per frame
@@ -52,6 +54,7 @@ public class PersonControl : MonoBehaviour
     {
         double random = Random.Range(0.0f, 1.0f);
         double cumulativeProb = 0;
+        previousWaypointIndex = waypointIndex;
         for (int i = 0; i < waypoints.Length; i++){
             cumulativeProb += transitionMatrix[waypointIndex, i];
             if(cumulativeProb >= random){
@@ -63,9 +66,9 @@ public class PersonControl : MonoBehaviour
 
      void Move()
     {
-
         transform.position = Vector3.MoveTowards (transform.position, waypoints[waypointIndex].transform.position, moveSpeed * Time.deltaTime);
         if(transform.position == waypoints [waypointIndex].transform.position){
+            UpdateWaypointInfo(waypoints[waypointIndex], true);
             StartCoroutine(WaitAtPoint(Random.Range(1, 7)));
             waypointIndex = NextNode();
         }
@@ -79,7 +82,27 @@ public class PersonControl : MonoBehaviour
             yield return new WaitForSeconds(1);
             counter--;
         }
-
         this.shouldMove = true;
+        this.decrease = true;
+
+        if (this.decrease)
+        {
+            UpdateWaypointInfo(waypoints[previousWaypointIndex], false);
+            this.decrease = false;
+        }
+    }
+
+    void UpdateWaypointInfo(Transform waypoint, bool increase) {
+        GameObject tooltip = waypoint.transform.GetChild(0).gameObject;
+
+        if (increase)
+        {
+            tooltip.GetComponent<TooltipControl>().IncreaseCount();
+        } 
+        else 
+        {
+            tooltip.GetComponent<TooltipControl>().DecreaseCount();
+        }
+        
     }
 }
