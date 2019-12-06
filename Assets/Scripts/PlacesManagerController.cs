@@ -10,9 +10,6 @@ public class PlacesManagerController : MonoBehaviour
 
     public Transform[] Waypoints { get { return waypoints; } set { waypoints = value; } }
 
-    public Text building1Text;
-
-
     static PlacesManagerController _instance;
     public static PlacesManagerController Instance
     {
@@ -25,12 +22,6 @@ public class PlacesManagerController : MonoBehaviour
             return _instance;
         }
         set { _instance = value; }
-    }
-    
-    void Start()
-    {
-        int num =  10;
-        building1Text.text = "HOLIS MEEP "+num;
     }
    void Awake()
     {
