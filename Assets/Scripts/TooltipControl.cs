@@ -7,6 +7,7 @@ public class TooltipControl : MonoBehaviour
 {
     private Text queueSize, lambda, miu;
     public float vQueueSize, vLambda, vMiu;
+    private bool recalculate = true;
 
     // Start is called before the first frame update
     void Start()
@@ -18,6 +19,28 @@ public class TooltipControl : MonoBehaviour
     void Update()
     {
         UpdateValues();   
+
+        if (this.recalculate)
+        {
+            StartCoroutine(RecalculateLambda(10));
+            this.vLambda = this.vQueueSize;
+        }
+    }
+
+    // 10 seconds as unit of time
+    // Refresh lambda every unit of time
+    IEnumerator RecalculateLambda(int seconds) {
+        this.recalculate = false;
+        int counter = seconds;
+        while (counter > 0) {
+            yield return new WaitForSeconds(1);
+            counter--;
+        }
+        this.recalculate = true;
+    }
+
+    public bool isOverloaded() {
+        return this.vLambda > this.vMiu;
     }
 
     public void IncreaseCount() {

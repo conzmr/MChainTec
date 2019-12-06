@@ -30,6 +30,7 @@ public class PersonControl : MonoBehaviour
     private int previousWaypointIndex;
     private bool shouldMove = true;
     private bool decrease = false;
+    private int timeToWait;
 
     // Start is called before the first frame update
     void Start()
@@ -54,7 +55,6 @@ public class PersonControl : MonoBehaviour
     {
         double random = Random.Range(0.0f, 1.0f);
         double cumulativeProb = 0;
-        previousWaypointIndex = waypointIndex;
         for (int i = 0; i < waypoints.Length; i++){
             cumulativeProb += transitionMatrix[waypointIndex, i];
             if(cumulativeProb >= random){
@@ -67,12 +67,33 @@ public class PersonControl : MonoBehaviour
      void Move()
     {
         transform.position = Vector3.MoveTowards (transform.position, waypoints[waypointIndex].transform.position, moveSpeed * Time.deltaTime);
-        if(transform.position == waypoints [waypointIndex].transform.position){
+        if(enteredNode()){
+            this.timeToWait = Random.Range(3, 10);
+            transform.GetChild(0).gameObject.SetActive(false);
+
             UpdateWaypointInfo(waypoints[waypointIndex], true);
-            StartCoroutine(WaitAtPoint(Random.Range(1, 7)));
+            StartCoroutine(WaitAtPoint(this.timeToWait));
+            previousWaypointIndex = waypointIndex;
             waypointIndex = NextNode();
         }
         
+    }
+
+    //To distribute the people inside the nodes
+    private bool enteredNode() {
+        GameObject waypoint = waypoints[waypointIndex].gameObject;
+        float width = waypoint.GetComponent<Renderer>().bounds.size.x;
+        float height = waypoint.GetComponent<Renderer>().bounds.size.y;
+
+        float xPos = waypoints[waypointIndex].transform.position.x;
+        float yPos = waypoints[waypointIndex].transform.position.y;
+
+        bool enteredX = (transform.position.x > (xPos-(width/3)+Random.Range(0f, 0.5f))) &&
+            (transform.position.x < (xPos+(width/3)-Random.Range(0f, 0.5f)));
+        bool enteredY = (transform.position.y > (yPos-(height/3)+Random.Range(0f, 0.5f))) &&
+            (transform.position.y < (yPos+(height/3)-Random.Range(0f, 0.5f)));
+
+        return enteredX && enteredY;
     }
 
     IEnumerator WaitAtPoint(int seconds) {
@@ -85,6 +106,7 @@ public class PersonControl : MonoBehaviour
         this.shouldMove = true;
         this.decrease = true;
 
+        //Person moving to a different node decreases the queue size
         if (this.decrease)
         {
             UpdateWaypointInfo(waypoints[previousWaypointIndex], false);
@@ -94,15 +116,24 @@ public class PersonControl : MonoBehaviour
 
     void UpdateWaypointInfo(Transform waypoint, bool increase) {
         GameObject tooltip = waypoint.transform.GetChild(0).gameObject;
+        TooltipControl tooltipInst = tooltip.GetComponent<TooltipControl>();
 
         if (increase)
         {
-            tooltip.GetComponent<TooltipControl>().IncreaseCount();
+            tooltipInst.IncreaseCount();
         } 
         else 
         {
-            tooltip.GetComponent<TooltipControl>().DecreaseCount();
+            tooltipInst.DecreaseCount();
         }
+        if (increase && tooltipInst.isOverloaded() && Random.Range(0,3) > 0)
+        {
+            //If the node is full, the person will move right away
+            //Visual feedback: An "explosion" appears on the head when its full
+            this.timeToWait = 1;
+            transform.GetChild(0).gameObject.SetActive(true);
+        }
+        
         
     }
 }
